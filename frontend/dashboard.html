@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard - Barbería</title>
+    <!-- Tailwind CSS (vía CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .bg-dark {
+        background-color: #000000;
+      }
+      .text-orange {
+        color: #cd7f09;
+      }
+    </style>
+  </head>
+  <body class="bg-dark text-orange font-sans min-h-screen">
+    <!-- Header con botón 'Cerrar' -->
+    <header class="flex justify-end items-center p-4 border-b border-[#cd7f09]">
+      <button
+        class="bg-[#cd7f09] text-black px-4 py-2 rounded font-semibold mr-4"
+        onclick="cerrarDashboard()"
+      >
+        CERRAR
+      </button>
+    </header>
+
+    <!-- Contenedor principal -->
+    <main class="p-4 flex flex-col md:flex-row gap-8">
+      <!-- Columna Izquierda: avatar, nombre, correo, teléfono -->
+      <aside class="w-full md:w-1/3 flex flex-col items-center">
+        <!-- Avatar y botón EDITAR -->
+        <div class="flex items-center mb-4">
+          <!-- Avatar (imagen de ejemplo) -->
+          <img
+            id="userAvatar"
+            src="https://placehold.co/200x200?text=Avatar"
+            alt="Foto Usuario"
+            class="rounded-full w-48 h-48 object-cover border-4 border-[#cd7f09]"
+          />
+          <!-- Botón Editar -->
+          <button
+            id="btnEditUser"
+            class="bg-gray-700 text-white p-2 rounded ml-4 hover:bg-gray-600 transition"
+          >
+            Editar
+          </button>
+        </div>
+
+        <div class="text-center">
+          <h2 id="userName" class="text-xl font-bold mb-1">Cargando...</h2>
+          <p id="userEmail" class="text-sm mb-1">...</p>
+          <p id="userPhone" class="text-sm mb-6">...</p>
+        </div>
+
+        <!-- Botones (Tomar turno, Pagar servicios, MIS CITAS) -->
+        <div class="flex flex-col items-center gap-6">
+          <button id="btnTomarTurno" class="flex flex-col items-center mt-4">
+            <img
+              src="https://placehold.co/80x80?text=Turno"
+              alt="Tomar turno"
+              class="mb-2"
+            />
+            <span class="font-semibold">TOMAR TURNO</span>
+          </button>
+          <button class="flex flex-col items-center">
+            <img
+              src="https://placehold.co/80x80?text=Pago"
+              alt="Pagar servicios"
+              class="mb-2"
+            />
+            <span class="font-semibold">PAGAR SERVICIOS</span>
+          </button>
+        </div>
+
+        <button
+          id="btnMisCitas"
+          class="bg-gray-700 text-white p-2 rounded mt-4 hover:bg-gray-600 transition"
+        >
+          Mis Citas
+        </button>
+      </aside>
+
+      <!-- Columna Derecha: calendario u otra info -->
+      <section class="w-full md:w-2/3 bg-black p-4 rounded">
+        <h3 class="text-lg font-bold mb-4">Mi Calendario</h3>
+        <div class="bg-white text-black p-4 rounded">
+          <!-- Calendario con selector de fecha -->
+          <input
+            type="date"
+            id="calendar"
+            class="w-full p-2 border border-[#cd7f09] rounded"
+          />
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center mt-8 border-t border-[#cd7f09] pt-4">
+      <p>Calle 13 N° 13 - 13, Pereira</p>
+      <p>3219882864</p>
+      <p>@losvuitton</p>
+    </footer>
+
+    <!-- MODAL PARA EDITAR DATOS DEL USUARIO -->
+    <div
+      id="modalEditUser"
+      class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center"
+    >
+      <div class="bg-white text-black rounded p-6 w-80">
+        <h2 class="text-lg font-bold mb-4">Editar Datos</h2>
+        <form id="formEditUser">
+          <div class="mb-4">
+            <label class="block mb-1 text-sm font-medium" for="editNombre"
+              >Nombre</label
+            >
+            <input
+              type="text"
+              id="editNombre"
+              class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block mb-1 text-sm font-medium" for="editCorreo"
+              >Correo</label
+            >
+            <input
+              type="email"
+              id="editCorreo"
+              class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
+              required
+            />
+          </div>
+          <div class="mb-6">
+            <label class="block mb-1 text-sm font-medium" for="editCelular"
+              >Nro. Celular</label
+            >
+            <input
+              type="tel"
+              id="editCelular"
+              class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
+              required
+            />
+          </div>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              id="btnCancelEdit"
+              class="px-3 py-1 bg-gray-400 text-white rounded"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-3 py-1 bg-[#cd7f09] text-black font-semibold rounded"
+            >
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!--Modal para ver las citas -->
+    <div
+      id="modalMisCitas"
+      class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center"
+    >
+      <div class="bg-white text-black rounded p-6 w-96">
+        <h2 class="text-lg font-bold mb-4">Mis Citas Agendadas</h2>
+        <table id="citasTable" class="w-full mb-4">
+          <thead>
+            <tr>
+              <th class="text-left">Fecha</th>
+              <th class="text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="citasList"></tbody>
+        </table>
+        <div class="flex justify-between">
+          <button
+            id="btnEliminarCita"
+            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Eliminar Cita
+          </button>
+          <button
+            id="btnEditarCita"
+            class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+          >
+            Editar Cita
+          </button>
+        </div>
+        <button
+          id="btnCerrarCitas"
+          class="mt-4 w-full px-4 py-2 bg-gray-500 text-white rounded"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+
+    <!-- Script -->
+    <script>
+      // Función para volver a la página de inicio
+      function cerrarDashboard() {
+        window.location.href = "./index.html";
+      }
+
+      // Referencias al DOM
+      const userAvatar = document.getElementById("userAvatar");
+      const userName = document.getElementById("userName");
+      const userEmail = document.getElementById("userEmail");
+      const userPhone = document.getElementById("userPhone");
+      const btnEditUser = document.getElementById("btnEditUser");
+      const modalEditUser = document.getElementById("modalEditUser");
+      const formEditUser = document.getElementById("formEditUser");
+      const editNombre = document.getElementById("editNombre");
+      const editCorreo = document.getElementById("editCorreo");
+      const editCelular = document.getElementById("editCelular");
+      const btnCancelEdit = document.getElementById("btnCancelEdit");
+      const btnTomarTurno = document.getElementById("btnTomarTurno");
+      const calendarInput = document.getElementById("calendar");
+
+      // Para guardar temporalmente la info del usuario
+      let userData = {};
+      let citasData = {};
+
+      // Al cargar la página, obtener ID de localStorage y hacer GET
+      document.addEventListener("DOMContentLoaded", async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          alert("No hay usuario logueado. Redirigiendo a inicio.");
+          window.location.href = "./index.html";
+          return;
+        }
+
+        try {
+          // GET /api/usuarios/:id
+          const resp = await fetch(
+            `http://localhost:4000/api/usuarios/${userId}`
+          );
+          if (!resp.ok) {
+            throw new Error("Error al obtener usuario");
+          }
+          const usuario = await resp.json();
+          // Asignar a userData
+          userData = usuario;
+
+          // Mostrar en pantalla
+          userName.textContent = usuario.nombre;
+          userEmail.textContent = usuario.correo;
+          userPhone.textContent = usuario.celular;
+          // userAvatar.src = ... (si tuvieras URL de avatar en la BD, la asignas aquí)
+        } catch (err) {
+          console.error(err);
+          alert("No se pudo cargar info del usuario.");
+        }
+      });
+
+      // Abrir modal de edición
+      btnEditUser.addEventListener("click", () => {
+        // Rellenar formulario con los datos actuales
+        editNombre.value = userData.nombre || "";
+        editCorreo.value = userData.correo || "";
+        editCelular.value = userData.celular || "";
+        // Mostrar modal
+        modalEditUser.classList.remove("hidden");
+      });
+
+      // Cancelar edición
+      btnCancelEdit.addEventListener("click", () => {
+        modalEditUser.classList.add("hidden");
+      });
+
+      // Guardar cambios (PUT)
+      formEditUser.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Tomar nuevos valores
+        const nuevoNombre = editNombre.value;
+        const nuevoCorreo = editCorreo.value;
+        const nuevoCelular = editCelular.value;
+
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          alert("No hay usuario logueado. No se puede editar.");
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:4000/api/usuarios/${userId}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                nombre: nuevoNombre,
+                correo: nuevoCorreo,
+                celular: nuevoCelular,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            alert("Error al editar usuario: " + errorData.message);
+            return;
+          }
+
+          const updated = await response.json();
+          alert("Usuario actualizado con éxito");
+
+          // Actualizar userData
+          userData = updated;
+
+          // Reflejar cambios en pantalla
+          userName.textContent = userData.nombre;
+          userEmail.textContent = userData.correo;
+          userPhone.textContent = userData.celular;
+
+          // Cerrar modal
+          modalEditUser.classList.add("hidden");
+        } catch (error) {
+          console.error(error);
+          alert("Error al editar usuario (Catch)");
+        }
+      });
+
+      // Modal editar citas
+      btnMisCitas.addEventListener("click", async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          alert("No hay usuario logueado.");
+          return;
+        }
+
+        fetch(`http://localhost:4000/api/citas/${userId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            citasData = data;
+            citasList.innerHTML = "";
+            citasData.forEach((cita) => {
+              citasList.innerHTML += `
+                <tr>
+                  <td>${cita.fecha}</td>
+                  <td>
+                    <button class="text-blue-500 hover:text-blue-700" onclick="editarCita('${cita._id}')">Editar</button>
+                    <button class="text-red-500 hover:text-red-700" onclick="eliminarCita('${cita._id}')">Eliminar</button>
+                  </td>
+                </tr>
+              `;
+            });
+          })
+          .catch((error) => {
+            console.error(error);
+            alert("Error al cargar las citas.");
+          });
+
+        modalMisCitas.classList.remove("hidden");
+      });
+
+      btnCerrarCitas.addEventListener("click", () => {
+        modalMisCitas.classList.add("hidden");
+      });
+
+      function eliminarCita(citaId) {
+        fetch(`http://localhost:4000/api/citas/${citaId}`, {
+          method: "DELETE",
+        })
+          .then((response) => {
+            if (response.ok) {
+              alert("Cita eliminada correctamente.");
+              citasData = citasData.filter((cita) => cita._id !== citaId);
+              btnMisCitas.click();
+            } else {
+              alert("Error al eliminar la cita.");
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+            alert("Error al eliminar la cita.");
+          });
+      }
+
+      function editarCita(citaId) {
+        alert(`Editando cita con ID: ${citaId}`);
+      }
+
+      // Evento cuando se hace clic en "Tomar turno"
+      btnTomarTurno.addEventListener("click", async () => {
+        const selectedDate = calendarInput.value;
+
+        if (!selectedDate) {
+          alert("Por favor, selecciona una fecha.");
+          return;
+        }
+
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) {
+          alert("No has iniciado sesión. Redirigiendo a inicio.");
+          window.location.href = "./index.html";
+          return;
+        }
+
+        try {
+          const response = await fetch("http://localhost:4000/api/citas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, fecha: selectedDate }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            alert("Error al agendar la cita: " + errorData.message);
+            return;
+          }
+
+          const data = await response.json();
+          alert(`Cita agendada para el ${data.fecha}`);
+        } catch (error) {
+          console.error(error);
+          alert("Error al agendar la cita.");
+        }
+      });
+    </script>
+  </body>
+</html>
