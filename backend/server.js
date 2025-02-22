@@ -13,14 +13,18 @@ mongoose
   .then(() => console.log("Conectado a MongoDB"))
   .catch((err) => console.error("Error al conectar a MongoDB: ", err));
 
-// Rutas base (opcional)
+// Rutas base
 app.get("/", (req, res) => {
   res.send("API de Barbería funcionando");
 });
 
-// Importar y usar tu archivo de rutas
+// Importar y usar las rutas de usuario
 const usuarioRoutes = require("./routes/usuario.routes");
-app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/usuarios", usuarioRoutes); // linea api usuarios
+
+// Importar y usar las rutas de citas
+const citaRoutes = require("./routes/cita.routes"); // Importa la ruta de citas
+app.use("/api/citas", citaRoutes); // Registra las rutas de citas correctamente
 
 // Crear o verificar superusuario
 (async () => {
@@ -38,11 +42,7 @@ app.use("/api/usuarios", usuarioRoutes);
   }
 })();
 
-// backend/server.js
-const citaRoutes = require("./routes/cita.routes"); // Importa la ruta de citas
-app.use("/api", citaRoutes); // Registra la ruta para las citas
-
-// Finalmente, levantar el servidor
+// levantar el servidor
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor en funcionamiento en el puerto ${PORT}`);

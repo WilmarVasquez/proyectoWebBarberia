@@ -1,0 +1,143 @@
+const Usuario = require("../models/usuario.model");
+
+// 1. Crear un nuevo usuario
+exports.crearUsuario = async (req, res) => {
+  try {
+    const { nombre, correo, celular, clave } = req.body;
+
+    // Validaciones básicas
+    if (!nombre || !correo || !celular || !clave) {
+      return res.status(400).json({ message: "Faltan datos requeridos" });
+    }
+
+    // Crear y guardar
+    const nuevoUsuario = new Usuario({
+      nombre,
+      correo,
+      celular,
+      clave,
+    });
+    const usuarioGuardado = await nuevoUsuario.save();
+
+    res.status(201).json(usuarioGuardado);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al registrar el usuario" });
+  }
+};
+
+// 2. Inicio de sesión de usuario
+exports.loginUsuario = async (req, res) => {
+  try {
+    const { correo, clave } = req.body;
+
+    // Validaciones
+    if (!correo || !clave) {
+      return res.status(400).json({ message: "Faltan correo y/o contraseña" });
+    }
+
+    // Buscar usuario por correo
+    const usuarioEncontrado = await Usuario.findOne({ correo });
+    if (!usuarioEncontrado) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Verificar contraseña
+    if (usuarioEncontrado.clave !== clave) {
+      return res.status(401).json({ message: "Contraseña incorrecta" });
+    }
+
+    // Si la contraseña coincide
+    res.status(200).json({
+      message: "Inicio de sesión exitoso",
+      usuario: {
+        _id: usuarioEncontrado._id,
+        nombre: usuarioEncontrado.nombre,
+        correo: usuarioEncontrado.correo,
+        rol: usuarioEncontrado.rol,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al procesar el login" });
+  }
+};
+
+// 3. Obtener un usuario por ID
+exports.obtenerUsuarioPorId = async (req, res) => {
+  try {
+    const usuario = await Usuario.findById(req.params.id);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    res.json(usuario);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al obtener el usuario" });
+  }
+};
+
+// 4. Actualizar un usuario
+exports.actualizarUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, correo, celular } = req.body;
+
+    // Validaciones básicas
+    if (!nombre || !correo || !celular) {
+      return res
+        .status(400)
+        .json({ message: "Faltan campos (nombre, correo, celular)" });
+    }
+
+    const usuarioEditado = await Usuario.findByIdAndUpdate(
+      id,
+      { nombre, correo, celular },
+      { new: true } // Retorna el documento actualizado
+    );
+
+    if (!usuarioEditado) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Retornar el usuario editado
+    res.json(usuarioEditado);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al editar el usuario" });
+  }
+};
+
+// 5. Cambiar el rol de un usuario (superusuario)
+exports.cambiarRolUsuario = async (req, res) => {
+  try {
+    const { rol } = req.body;
+    const { id } = req.params;
+
+    // Validar que sea un rol permitido
+    const rolesPermitidos = [
+      "cliente",
+      "barbero",
+      "administrador",
+      "superadmin",
+    ];
+    if (!rolesPermitidos.includes(rol)) {
+      return res.status(400).json({ message: "Rol no permitido" });
+    }
+
+    // Actualizar rol
+    const usuarioActualizado = await Usuario.findByIdAndUpdate(
+      id,
+      { rol },
+      { new: true }
+    );
+    if (!usuarioActualizado) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    res.json(usuarioActualizado);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al actualizar el rol" });
+  }
+};

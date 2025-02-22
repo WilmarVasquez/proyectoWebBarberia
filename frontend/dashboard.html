@@ -178,20 +178,6 @@
           </thead>
           <tbody id="citasList"></tbody>
         </table>
-        <div class="flex justify-between">
-          <button
-            id="btnEliminarCita"
-            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            Eliminar Cita
-          </button>
-          <button
-            id="btnEditarCita"
-            class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-          >
-            Editar Cita
-          </button>
-        </div>
         <button
           id="btnCerrarCitas"
           class="mt-4 w-full px-4 py-2 bg-gray-500 text-white rounded"
@@ -205,6 +191,7 @@
     <script>
       // Función para volver a la página de inicio
       function cerrarDashboard() {
+        localStorage.removeItem("userId");
         window.location.href = "./index.html";
       }
 
@@ -222,10 +209,14 @@
       const btnCancelEdit = document.getElementById("btnCancelEdit");
       const btnTomarTurno = document.getElementById("btnTomarTurno");
       const calendarInput = document.getElementById("calendar");
+      const btnMisCitas = document.getElementById("btnMisCitas");
+      const modalMisCitas = document.getElementById("modalMisCitas");
+      const citasList = document.getElementById("citasList");
+      const btnCerrarCitas = document.getElementById("btnCerrarCitas");
 
       // Para guardar temporalmente la info del usuario
       let userData = {};
-      let citasData = {};
+      let citasData = [];
 
       // Al cargar la página, obtener ID de localStorage y hacer GET
       document.addEventListener("DOMContentLoaded", async () => {
