@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Barbero - Barbería</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .bg-dark {
+        background-color: #000000;
+      }
+      .text-orange {
+        color: #cd7f09;
+      }
+    </style>
+  </head>
+  <body class="bg-dark text-orange font-sans min-h-screen">
+    <header class="flex justify-end items-center p-4 border-b border-[#cd7f09]">
+      <button
+        class="bg-[#cd7f09] text-black px-4 py-2 rounded font-semibold mr-4"
+        onclick="cerrarDashboard()"
+      >
+        CERRAR
+      </button>
+    </header>
+
+    <main class="p-4 flex flex-col items-center">
+      <button
+        id="btnMisCitas"
+        class="bg-gray-700 text-white p-2 rounded mt-4 hover:bg-gray-600 transition"
+      >
+        Mis Citas
+      </button>
+      <div id="citasContainer" class="mt-4"></div>
+    </main>
+
+    <script>
+      document
+        .getElementById("btnMisCitas")
+        .addEventListener("click", mostrarMisCitas);
+
+      async function mostrarMisCitas() {
+        const barberoId = obtenerIdBarberoAutenticado();
+        if (!barberoId) {
+          alert("Barbero no autenticado");
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:4000/api/citas/barbero/${barberoId}`
+          );
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const citas = await response.json();
+          mostrarCitasEnTabla(citas);
+        } catch (error) {
+          console.error("Error al obtener las citas:", error);
+          alert("Error al obtener las citas");
+        }
+      }
+
+      function obtenerIdBarberoAutenticado() {
+        return localStorage.getItem("userId");
+      }
+
+      function mostrarCitasEnTabla(citas) {
+        const citasContainer = document.getElementById("citasContainer");
+        citasContainer.innerHTML = "";
+
+        if (citas.length === 0) {
+          citasContainer.innerHTML = "<p>No tienes citas agendadas.</p>";
+          return;
+        }
+
+        const tabla = document.createElement("table");
+        tabla.className = "w-full text-left table-auto";
+        tabla.innerHTML = `
+          <thead>
+            <tr>
+              <th class="border px-4 py-2">Fecha y Hora</th>
+              <th class="border px-4 py-2">Usuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${citas
+              .map(
+                (cita) => `
+              <tr>
+                <td class="border px-4 py-2">${new Date(
+                  cita.fecha
+                ).toLocaleString()}</td>
+                <td class="border px-4 py-2">${cita.userId.nombre}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </tbody>
+        `;
+        citasContainer.appendChild(tabla);
+      }
+
+      function cerrarDashboard() {
+        localStorage.removeItem("userId");
+        localStorage.removeItem("userRol");
+        window.location.href = "./index.html";
+      }
+    </script>
+  </body>
+</html>

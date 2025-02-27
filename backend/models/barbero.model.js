@@ -1,8 +1,6 @@
-// backend/models/usuario.model.js
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
-const UsuarioSchema = new Schema({
+const BarberoSchema = new mongoose.Schema({
   nombre: {
     type: String,
     required: true,
@@ -23,7 +21,7 @@ const UsuarioSchema = new Schema({
   rol: {
     type: String,
     required: true,
-    default: "cliente",
+    default: "barbero",
   },
   fecha_creacion: {
     type: Date,
@@ -31,4 +29,4 @@ const UsuarioSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model("Usuario", UsuarioSchema);
+module.exports = mongoose.model("Barbero", BarberoSchema);

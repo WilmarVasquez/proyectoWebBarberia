@@ -26,6 +26,10 @@ app.use("/api/usuarios", usuarioRoutes); // linea api usuarios
 const citaRoutes = require("./routes/cita.routes"); // Importa la ruta de citas
 app.use("/api/citas", citaRoutes); // Registra las rutas de citas correctamente
 
+//Ruta de Barberos
+const barberoRoutes = require("./routes/barbero.routes");
+app.use("/api/barberos", barberoRoutes);
+
 // Crear o verificar superusuario
 (async () => {
   const Usuario = require("./models/usuario.model");

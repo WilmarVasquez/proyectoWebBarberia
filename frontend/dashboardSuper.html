@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Superadmin - Barbería</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .bg-dark {
+        background-color: #000000;
+      }
+      .text-orange {
+        color: #cd7f09;
+      }
+    </style>
+  </head>
+  <body class="bg-dark text-orange font-sans min-h-screen">
+    <header class="flex justify-end items-center p-4 border-b border-[#cd7f09]">
+      <button
+        class="bg-[#cd7f09] text-black px-4 py-2 rounded font-semibold mr-4"
+        onclick="cerrarDashboard()"
+      >
+        CERRAR
+      </button>
+    </header>
+
+    <main class="p-4">
+      <h1 class="text-2xl font-bold mb-8">Dashboard Superadmin</h1>
+      <section class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Gestión de Perfiles</h2>
+        <button
+          id="btnGestionPerfiles"
+          class="bg-[#cd7f09] text-black px-4 py-2 rounded font-semibold"
+        >
+          Gestión de Perfiles
+        </button>
+      </section>
+    </main>
+
+    <div
+      id="modalGestionPerfiles"
+      class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center"
+    >
+      <div class="bg-white text-black rounded p-6 w-96">
+        <h2 class="text-lg font-bold mb-4">Gestión de Perfiles</h2>
+        <form id="formGestionPerfiles">
+          <label for="buscarCorreo" class="block mb-1 text-sm font-medium"
+            >Buscar Usuario o Barbero por Correo</label
+          >
+          <input
+            type="email"
+            id="buscarCorreo"
+            class="w-full border border-gray-300 rounded px-2 py-1 mb-4"
+            required
+          />
+          <label for="selectRol" class="block mb-1 text-sm font-medium"
+            >Asignar Rol</label
+          >
+          <select
+            id="selectRol"
+            class="w-full border border-gray-300 rounded px-2 py-1 mb-4"
+            required
+          >
+            <option value="cliente">Cliente</option>
+            <option value="barbero">Barbero</option>
+            <option value="administrador">Administrador</option>
+          </select>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              id="btnCancelarGestionPerfiles"
+              class="px-3 py-1 bg-gray-400 text-white rounded"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-3 py-1 bg-[#cd7f09] text-black font-semibold rounded"
+            >
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Función para cerrar el dashboard
+      function cerrarDashboard() {
+        localStorage.removeItem("userId");
+        localStorage.removeItem("userRol");
+        window.location.href = "./index.html";
+      }
+
+      // Mostrar el modal de gestión de perfiles
+      document
+        .getElementById("btnGestionPerfiles")
+        .addEventListener("click", () => {
+          document
+            .getElementById("modalGestionPerfiles")
+            .classList.remove("hidden");
+        });
+
+      // Ocultar el modal de gestión de perfiles
+      document
+        .getElementById("btnCancelarGestionPerfiles")
+        .addEventListener("click", () => {
+          document
+            .getElementById("modalGestionPerfiles")
+            .classList.add("hidden");
+        });
+
+      // Función para actualizar el rol de un usuario o barbero
+      async function actualizarRol(url, rol) {
+        const response = await fetch(url, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rol }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json(); // Obtener detalles del error
+          throw new Error(errorData.message || "Error al actualizar el rol");
+        }
+      }
+
+      // Manejar el envío del formulario de gestión de perfiles
+      document
+        .getElementById("formGestionPerfiles")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const correo = document.getElementById("buscarCorreo").value.trim();
+          const rol = document.getElementById("selectRol").value;
+
+          if (!correo) {
+            alert("Por favor, ingresa un correo válido.");
+            return;
+          }
+
+          try {
+            console.log("Buscando usuario con correo:", correo); // Depuración
+            // 1. Buscar en usuarios
+            const responseUsuario = await fetch(
+              `http://localhost:4000/api/usuarios/buscar?correo=${correo}`
+            );
+
+            if (responseUsuario.ok) {
+              // Si se encuentra en usuarios, actualizar su rol
+              const usuario = await responseUsuario.json();
+              await actualizarRol(
+                `http://localhost:4000/api/usuarios/${usuario._id}/rol`,
+                rol
+              );
+              alert(
+                `Rol actualizado a "${rol}" para el usuario ${usuario.nombre}`
+              );
+            } else {
+              // 2. Si no se encuentra en usuarios, buscar en barberos
+              console.log("Buscando barbero con correo:", correo);
+              const responseBarbero = await fetch(
+                `http://localhost:4000/api/barberos/buscar?correo=${correo}`
+              );
+
+              if (responseBarbero.ok) {
+                // Si se encuentra en barberos, actualizar su rol
+                const barbero = await responseBarbero.json();
+                await actualizarRol(
+                  `http://localhost:4000/api/barberos/${barbero._id}/rol`,
+                  rol
+                );
+                alert(
+                  `Rol actualizado a "${rol}" para el barbero ${barbero.nombre}`
+                );
+              } else {
+                throw new Error("Usuario o barbero no encontrado");
+              }
+            }
+
+            // Ocultar el modal después de actualizar
+            document
+              .getElementById("modalGestionPerfiles")
+              .classList.add("hidden");
+          } catch (error) {
+            console.error("Error:", error); // Depuración
+            alert(error.message);
+          }
+        });
+    </script>
+  </body>
+</html>

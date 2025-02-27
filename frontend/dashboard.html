@@ -81,16 +81,58 @@
         </button>
       </aside>
 
-      <!-- Columna Derecha: calendario u otra info -->
+      <!-- Columna Derecha: información adicional (con el formulario de tomar turno) -->
       <section class="w-full md:w-2/3 bg-black p-4 rounded">
-        <h3 class="text-lg font-bold mb-4">Mi Calendario</h3>
+        <h3 class="text-lg font-bold mb-4">Agendar Cita</h3>
         <div class="bg-white text-black p-4 rounded">
-          <!-- Calendario con selector de fecha -->
-          <input
-            type="date"
-            id="calendar"
-            class="w-full p-2 border border-[#cd7f09] rounded"
-          />
+          <!-- Formulario para agendar cita -->
+          <form id="formTomarTurno">
+            <!-- Calendario con selector de fecha -->
+            <div class="mb-4">
+              <label class="block mb-1 text-sm font-medium" for="calendar"
+                >Fecha</label
+              >
+              <input
+                type="date"
+                id="calendar"
+                class="w-full p-2 border border-[#cd7f09] rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label class="block mb-1 text-sm font-medium" for="selectBarbero"
+                >Barbero</label
+              >
+              <select
+                id="selectBarbero"
+                class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
+                required
+              >
+                <option value="">Cargando barberos...</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label class="block mb-1 text-sm font-medium" for="selectHora"
+                >Hora</label
+              >
+              <select
+                id="selectHora"
+                class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
+                required
+              >
+                <option value="">Seleccionar hora</option>
+                <!-- Opciones de horas se cargarán dinámicamente -->
+              </select>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button
+                type="submit"
+                class="px-3 py-1 bg-[#cd7f09] text-black font-semibold rounded"
+              >
+                Agendar
+              </button>
+            </div>
+          </form>
         </div>
       </section>
     </main>
@@ -102,67 +144,7 @@
       <p>@losvuitton</p>
     </footer>
 
-    <!-- MODAL PARA EDITAR DATOS DEL USUARIO -->
-    <div
-      id="modalEditUser"
-      class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center"
-    >
-      <div class="bg-white text-black rounded p-6 w-80">
-        <h2 class="text-lg font-bold mb-4">Editar Datos</h2>
-        <form id="formEditUser">
-          <div class="mb-4">
-            <label class="block mb-1 text-sm font-medium" for="editNombre"
-              >Nombre</label
-            >
-            <input
-              type="text"
-              id="editNombre"
-              class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
-              required
-            />
-          </div>
-          <div class="mb-4">
-            <label class="block mb-1 text-sm font-medium" for="editCorreo"
-              >Correo</label
-            >
-            <input
-              type="email"
-              id="editCorreo"
-              class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
-              required
-            />
-          </div>
-          <div class="mb-6">
-            <label class="block mb-1 text-sm font-medium" for="editCelular"
-              >Nro. Celular</label
-            >
-            <input
-              type="tel"
-              id="editCelular"
-              class="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none"
-              required
-            />
-          </div>
-          <div class="flex justify-end gap-2">
-            <button
-              type="button"
-              id="btnCancelEdit"
-              class="px-3 py-1 bg-gray-400 text-white rounded"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              class="px-3 py-1 bg-[#cd7f09] text-black font-semibold rounded"
-            >
-              Guardar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!--Modal para ver las citas -->
+    <!-- Modal para ver las citas -->
     <div
       id="modalMisCitas"
       class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center"
@@ -173,6 +155,8 @@
           <thead>
             <tr>
               <th class="text-left">Fecha</th>
+              <th class="text-left">Hora</th>
+              <th class="text-left">Barbero</th>
               <th class="text-left">Acciones</th>
             </tr>
           </thead>
@@ -201,190 +185,79 @@
       const userEmail = document.getElementById("userEmail");
       const userPhone = document.getElementById("userPhone");
       const btnEditUser = document.getElementById("btnEditUser");
-      const modalEditUser = document.getElementById("modalEditUser");
-      const formEditUser = document.getElementById("formEditUser");
-      const editNombre = document.getElementById("editNombre");
-      const editCorreo = document.getElementById("editCorreo");
-      const editCelular = document.getElementById("editCelular");
-      const btnCancelEdit = document.getElementById("btnCancelEdit");
-      const btnTomarTurno = document.getElementById("btnTomarTurno");
+      const formTomarTurno = document.getElementById("formTomarTurno");
+      const selectBarbero = document.getElementById("selectBarbero");
+      const selectHora = document.getElementById("selectHora");
       const calendarInput = document.getElementById("calendar");
       const btnMisCitas = document.getElementById("btnMisCitas");
       const modalMisCitas = document.getElementById("modalMisCitas");
       const citasList = document.getElementById("citasList");
       const btnCerrarCitas = document.getElementById("btnCerrarCitas");
 
-      // Para guardar temporalmente la info del usuario
-      let userData = {};
-      let citasData = [];
-
-      // Al cargar la página, obtener ID de localStorage y hacer GET
-      document.addEventListener("DOMContentLoaded", async () => {
-        const userId = localStorage.getItem("userId");
-        if (!userId) {
-          alert("No hay usuario logueado. Redirigiendo a inicio.");
-          window.location.href = "./index.html";
-          return;
-        }
-
-        try {
-          // GET /api/usuarios/:id
-          const resp = await fetch(
-            `http://localhost:4000/api/usuarios/${userId}`
-          );
-          if (!resp.ok) {
-            throw new Error("Error al obtener usuario");
-          }
-          const usuario = await resp.json();
-          // Asignar a userData
-          userData = usuario;
-
-          // Mostrar en pantalla
-          userName.textContent = usuario.nombre;
-          userEmail.textContent = usuario.correo;
-          userPhone.textContent = usuario.celular;
-          // userAvatar.src = ... (si tuvieras URL de avatar en la BD, la asignas aquí)
-        } catch (err) {
-          console.error(err);
-          alert("No se pudo cargar info del usuario.");
-        }
-      });
-
-      // Abrir modal de edición
-      btnEditUser.addEventListener("click", () => {
-        // Rellenar formulario con los datos actuales
-        editNombre.value = userData.nombre || "";
-        editCorreo.value = userData.correo || "";
-        editCelular.value = userData.celular || "";
-        // Mostrar modal
-        modalEditUser.classList.remove("hidden");
-      });
-
-      // Cancelar edición
-      btnCancelEdit.addEventListener("click", () => {
-        modalEditUser.classList.add("hidden");
-      });
-
-      // Guardar cambios (PUT)
-      formEditUser.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        // Tomar nuevos valores
-        const nuevoNombre = editNombre.value;
-        const nuevoCorreo = editCorreo.value;
-        const nuevoCelular = editCelular.value;
-
-        const userId = localStorage.getItem("userId");
-        if (!userId) {
-          alert("No hay usuario logueado. No se puede editar.");
-          return;
-        }
-
+      // Función para obtener el nombre del barbero por su ID
+      async function obtenerNombreBarbero(barberoId) {
         try {
           const response = await fetch(
-            `http://localhost:4000/api/usuarios/${userId}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                nombre: nuevoNombre,
-                correo: nuevoCorreo,
-                celular: nuevoCelular,
-              }),
-            }
+            `http://localhost:4000/api/barberos/${barberoId}`
           );
-
           if (!response.ok) {
-            const errorData = await response.json();
-            alert("Error al editar usuario: " + errorData.message);
-            return;
+            throw new Error("Error al obtener el nombre del barbero");
           }
-
-          const updated = await response.json();
-          alert("Usuario actualizado con éxito");
-
-          // Actualizar userData
-          userData = updated;
-
-          // Reflejar cambios en pantalla
-          userName.textContent = userData.nombre;
-          userEmail.textContent = userData.correo;
-          userPhone.textContent = userData.celular;
-
-          // Cerrar modal
-          modalEditUser.classList.add("hidden");
+          const barbero = await response.json();
+          return barbero.nombre; // Retornar el nombre del barbero
         } catch (error) {
           console.error(error);
-          alert("Error al editar usuario (Catch)");
+          return "Barbero desconocido"; // En caso de error, retornar un valor por defecto
         }
-      });
-
-      // Modal editar citas
-      btnMisCitas.addEventListener("click", async () => {
-        const userId = localStorage.getItem("userId");
-        if (!userId) {
-          alert("No hay usuario logueado.");
-          return;
-        }
-
-        fetch(`http://localhost:4000/api/citas/${userId}`)
-          .then((response) => response.json())
-          .then((data) => {
-            citasData = data;
-            citasList.innerHTML = "";
-            citasData.forEach((cita) => {
-              citasList.innerHTML += `
-                <tr>
-                  <td>${cita.fecha}</td>
-                  <td>
-                    <button class="text-blue-500 hover:text-blue-700" onclick="editarCita('${cita._id}')">Editar</button>
-                    <button class="text-red-500 hover:text-red-700" onclick="eliminarCita('${cita._id}')">Eliminar</button>
-                  </td>
-                </tr>
-              `;
-            });
-          })
-          .catch((error) => {
-            console.error(error);
-            alert("Error al cargar las citas.");
-          });
-
-        modalMisCitas.classList.remove("hidden");
-      });
-
-      btnCerrarCitas.addEventListener("click", () => {
-        modalMisCitas.classList.add("hidden");
-      });
-
-      function eliminarCita(citaId) {
-        fetch(`http://localhost:4000/api/citas/${citaId}`, {
-          method: "DELETE",
-        })
-          .then((response) => {
-            if (response.ok) {
-              alert("Cita eliminada correctamente.");
-              citasData = citasData.filter((cita) => cita._id !== citaId);
-              btnMisCitas.click();
-            } else {
-              alert("Error al eliminar la cita.");
-            }
-          })
-          .catch((error) => {
-            console.error(error);
-            alert("Error al eliminar la cita.");
-          });
       }
 
-      function editarCita(citaId) {
-        alert(`Editando cita con ID: ${citaId}`);
+      // Función para cargar los barberos disponibles
+      async function cargarBarberos() {
+        try {
+          const response = await fetch("http://localhost:4000/api/barberos");
+          if (!response.ok) {
+            throw new Error("Error al cargar barberos");
+          }
+          const barberos = await response.json();
+          selectBarbero.innerHTML =
+            '<option value="">Seleccionar barbero</option>';
+          barberos.forEach((barbero) => {
+            selectBarbero.innerHTML += `<option value="${barbero._id}">${barbero.nombre}</option>`;
+          });
+        } catch (error) {
+          console.error(error);
+          alert("Error al cargar barberos");
+        }
       }
 
-      // Evento cuando se hace clic en "Tomar turno"
-      btnTomarTurno.addEventListener("click", async () => {
+      // Función para cargar las horas disponibles
+      function cargarHoras() {
+        selectHora.innerHTML = '<option value="">Seleccionar hora</option>';
+        const horas = [];
+        for (let hora = 8; hora <= 21; hora++) {
+          horas.push(`${hora}:00`);
+        }
+        horas.forEach((hora) => {
+          selectHora.innerHTML += `<option value="${hora}">${hora}</option>`;
+        });
+      }
+
+      // Cargar barberos y horas al iniciar la página
+      document.addEventListener("DOMContentLoaded", async () => {
+        await cargarBarberos();
+        cargarHoras();
+      });
+
+      // Guardar la cita con barbero y hora seleccionados
+      formTomarTurno.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const selectedBarbero = selectBarbero.value;
+        const selectedHora = selectHora.value;
         const selectedDate = calendarInput.value;
 
-        if (!selectedDate) {
-          alert("Por favor, selecciona una fecha.");
+        if (!selectedBarbero || !selectedHora || !selectedDate) {
+          alert("Por favor, selecciona una fecha, un barbero y una hora.");
           return;
         }
 
@@ -397,10 +270,26 @@
         }
 
         try {
+          // Obtener el nombre del barbero
+          const nombreBarbero = await obtenerNombreBarbero(selectedBarbero);
+
+          // Formatear la fecha y hora correctamente
+          const fechaHora = `${selectedDate}T${selectedHora}:00.000Z`;
+
+          // Verificar que la fecha sea válida
+          if (isNaN(new Date(fechaHora).getTime())) {
+            throw new Error("La fecha y hora seleccionadas no son válidas.");
+          }
+
+          // Agendar la cita
           const response = await fetch("http://localhost:4000/api/citas", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, fecha: selectedDate }),
+            body: JSON.stringify({
+              userId,
+              fecha: fechaHora, // Usar la fecha formateada
+              barberoId: selectedBarbero,
+            }),
           });
 
           if (!response.ok) {
@@ -410,11 +299,99 @@
           }
 
           const data = await response.json();
-          alert(`Cita agendada para el ${data.fecha}`);
+          alert(
+            `Cita agendada para el ${data.fecha.split("T")[0]} a las ${
+              data.fecha.split("T")[1].split(":")[0]
+            }:00 con ${nombreBarbero}`
+          );
         } catch (error) {
           console.error(error);
-          alert("Error al agendar la cita.");
+          alert("Error al agendar la cita: " + error.message);
         }
+      });
+
+      // Función para cargar las citas del usuario
+      async function cargarCitas() {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          alert("No has iniciado sesión. Redirigiendo a inicio.");
+          window.location.href = "./index.html";
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:4000/api/citas/${userId}`
+          );
+          if (!response.ok) {
+            throw new Error("Error al cargar las citas");
+          }
+          const citas = await response.json();
+
+          // Limpiar la lista de citas
+          citasList.innerHTML = "";
+
+          // Mostrar las citas en la tabla
+          citas.forEach((cita) => {
+            const fecha = new Date(cita.fecha).toLocaleDateString();
+            const hora = new Date(cita.fecha).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            citasList.innerHTML += `
+              <tr>
+                <td>${fecha}</td>
+                <td>${hora}</td>
+                <td>${cita.barberoId.nombre}</td>
+                <td>
+                  <button class="text-blue-500 hover:text-blue-700" onclick="editarCita('${cita._id}')">Editar</button>
+                  <button class="text-red-500 hover:text-red-700" onclick="eliminarCita('${cita._id}')">Eliminar</button>
+                </td>
+              </tr>
+            `;
+          });
+
+          // Mostrar el modal
+          modalMisCitas.classList.remove("hidden");
+        } catch (error) {
+          console.error(error);
+          alert("Error al cargar las citas");
+        }
+      }
+
+      // Función para editar una cita
+      function editarCita(citaId) {
+        // Lógica para editar la cita
+        alert(`Editar cita con ID: ${citaId}`);
+      }
+
+      // Función para eliminar una cita
+      async function eliminarCita(citaId) {
+        try {
+          const response = await fetch(
+            `http://localhost:4000/api/citas/${citaId}`,
+            {
+              method: "DELETE",
+            }
+          );
+          if (!response.ok) {
+            throw new Error("Error al eliminar la cita");
+          }
+          alert("Cita eliminada correctamente");
+          cargarCitas(); // Recargar la lista de citas
+        } catch (error) {
+          console.error(error);
+          alert("Error al eliminar la cita");
+        }
+      }
+
+      // Evento para abrir el modal de citas
+      btnMisCitas.addEventListener("click", cargarCitas);
+
+      // Evento para cerrar el modal de citas
+      btnCerrarCitas.addEventListener("click", () => {
+        modalMisCitas.classList.add("hidden");
       });
     </script>
   </body>

@@ -9,8 +9,13 @@ const CitaSchema = new Schema({
     ref: "Usuario", // Relacionamos con el modelo de Usuario
     required: true,
   },
+  barberoId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Barbero", // Relacionamos con el modelo de Barbero
+    required: true,
+  },
   fecha: {
-    type: String, // La fecha se almacena como string (ISO 8601)
+    type: Date, // La fecha se almacena como Date para almacenar dia, mes y hora (ISO 8601)
     required: true,
   },
   fecha_creacion: {

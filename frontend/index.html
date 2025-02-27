@@ -230,7 +230,8 @@
         const loginClave = document.getElementById("loginClave").value;
 
         try {
-          const response = await fetch(
+          // Intentar iniciar sesión como usuario
+          const responseUsuario = await fetch(
             "http://localhost:4000/api/usuarios/login",
             {
               method: "POST",
@@ -239,18 +240,43 @@
             }
           );
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            alert("Error al iniciar sesión: " + errorData.message);
+          if (responseUsuario.ok) {
+            const data = await responseUsuario.json();
+            localStorage.setItem("userId", data.usuario._id);
+            localStorage.setItem("userRol", data.usuario.rol);
+
+            // Redirigir según el rol
+            if (data.usuario.rol === "superadmin") {
+              window.location.href = "./dashboardSuper.html";
+            } else if (data.usuario.rol === "barbero") {
+              window.location.href = "./dashboardBarbero.html";
+            } else {
+              window.location.href = "./dashboard.html";
+            }
             return;
           }
 
-          // Guardar el userId en el localStorage
-          const data = await response.json();
-          localStorage.setItem("userId", data.usuario._id);
+          // Si no es un usuario, intentar iniciar sesión como barbero
+          const responseBarbero = await fetch(
+            "http://localhost:4000/api/barberos/login",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ correo: loginCorreo, clave: loginClave }),
+            }
+          );
 
-          // Redirigir al dashboard
-          window.location.href = "./dashboard.html";
+          if (responseBarbero.ok) {
+            const data = await responseBarbero.json();
+            localStorage.setItem("userId", data.barbero._id);
+            localStorage.setItem("userRol", "barbero");
+            window.location.href = "./dashboardBarbero.html";
+            return;
+          }
+
+          // Si no se pudo iniciar sesión, mostrar error
+          const errorData = await responseUsuario.json();
+          alert("Error al iniciar sesión: " + errorData.message);
         } catch (error) {
           console.error(error);
           alert("Error al iniciar sesión");

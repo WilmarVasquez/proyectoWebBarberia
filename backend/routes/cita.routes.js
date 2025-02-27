@@ -14,4 +14,9 @@ router.put("/:id", citaController.actualizarCita);
 // 4. Eliminar una cita
 router.delete("/:id", citaController.eliminarCita);
 
+// 5. Obtener todas las citas de un barbero
+router.get("/barbero/:barberoId", citaController.obtenerCitasPorBarbero);
+
+module.exports = router;
+
 module.exports = router;
